@@ -10,26 +10,68 @@ import GkashPayment
 
 struct ContentView: View, TransStatusCallback {
     func getStatus(response: PaymentResponse) {
-        print("Status: " + response.Status)
+        print("getStatus: " + response.Status)
+        paymentResponse = response
+        currentPage = "ResponsePage"
+        isShowingView = false
     }
     
-    @State private var amount: String = ""
+    @State private var amount: String = "0.10"
+    @State private var request : PaymentRequest = PaymentRequest()
+    @State private var paymentResponse: PaymentResponse = PaymentResponse()
+    @State private var currentPage = "MainPage"
+    @State private var isShowingView = false
     
-    func generateRequest() -> PaymentRequest{
+    func generateRequest(){
+        //Update your cid and signaturekey
         //cartId must be unique
-        //returnUrl will be your URL Scheme. eg: gkash
-        return PaymentRequest(cid: "M102-U-XXX", signatureKey: "YourSignatureKey", amount: amount, cartId: "IOSSDK" + String(format: "%.1f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "")
+        //returnUrl will be your APP URL Scheme. eg: gkash
+        //if production purpose set isProd to true
+        request = PaymentRequest(cid: "M102-U-XXX", signatureKey: "YourSignatureKey", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self)
     }
     
     var body: some View {
-        NavigationView{
-            VStack {
-                TextField("Amount", text: $amount).keyboardType(.numberPad).textFieldStyle(.roundedBorder)
-                NavigationLink(destination: GkashPaymentSDK(request: generateRequest(), callback: self)){
-                    Text("Submit")
-                }
-                Spacer()
-            }.padding(20)
+        switch currentPage{
+        case "MainPage":
+            NavigationView{
+                VStack{
+                    TextField("Amount", text: $amount).keyboardType(.numberPad).textFieldStyle(.roundedBorder).padding(.bottom)
+                    Button {
+                    } label: {
+                        NavigationLink(destination:  GkashPaymentSDK(request: request), isActive: $isShowingView) {
+                            Button{
+                                
+                            }label: {
+                                Text("Submit")
+                                
+                            }.buttonStyle(.borderedProminent)
+                       }
+                    }.simultaneousGesture(TapGesture().onEnded{
+                        isShowingView = true
+                        generateRequest()
+                    })
+                    Spacer()
+                }.padding(30).navigationBarHidden(true)
+            }
+        case "ResponsePage":
+            VStack{
+                Text("Status: " + paymentResponse.Status)
+                Text("Description: " + paymentResponse.Description)
+                Text("POID: " + paymentResponse.POID)
+                Text("Amount: " + paymentResponse.Currency + paymentResponse.Amount)
+                Text("CartId: " + paymentResponse.CartId)
+                Text("PaymentType: " + paymentResponse.PaymentType)
+                Text("CID: " + paymentResponse.CID)
+                Button {
+                    currentPage = "MainPage"
+                } label: {
+                    Text("Next payment")
+                }.buttonStyle(.borderedProminent)
+            }.navigationBarHidden(true)
+        default:
+            Text("default")
+            
         }
+
     }
 }

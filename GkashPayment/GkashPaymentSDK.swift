@@ -10,39 +10,19 @@ import SwiftUI
 import WebKit
 public struct GkashPaymentSDK: View {
   var request: PaymentRequest
-  var callback: TransStatusCallback
   
-  public init(request : PaymentRequest, callback: TransStatusCallback) {
+  public init(request : PaymentRequest) {
     self.request = request
-    self.callback = callback
   }
   public var body: some View {
     MyWebView(request: request).onOpenURL { url in
-      print("MyWebView :" + url.absoluteString)
-      let status : String = getQueryStringParameter(url: url.absoluteString, param: "status") ?? "Unknown status"
-      let description : String = getQueryStringParameter(url: url.absoluteString, param: "description") ?? ""
-      let CID : String = getQueryStringParameter(url: url.absoluteString, param: "CID") ?? ""
-      let POID : String = getQueryStringParameter(url: url.absoluteString, param: "POID") ?? ""
-      let cartid : String = getQueryStringParameter(url: url.absoluteString, param: "cartid") ?? ""
-      let amount : String = getQueryStringParameter(url: url.absoluteString, param: "amount") ?? ""
-      let currency : String = getQueryStringParameter(url: url.absoluteString, param: "currency") ?? ""
-      let PaymentType : String = getQueryStringParameter(url: url.absoluteString, param: "PaymentType") ?? ""
-      let signature : String = getQueryStringParameter(url: url.absoluteString, param: "signature") ?? ""
-      let resp : PaymentResponse = PaymentResponse(Status: status, Amount: amount, CartId: cartid, Description: description, Currency: currency, POID: POID, CID: CID, PaymentType: PaymentType)
-      if(resp.validateSignature(signature: signature, request: request)){
-        callback.getStatus(response: resp)
-      }else{
-        resp.Status = "11 - Pending"
-        resp.Description = "Invalid Signature"
-        callback.getStatus(response: resp)
-      }
+        print("onOpenURL")
+        request.StatusCallback(url: url)
     }
-  }
-  public func getQueryStringParameter(url: String, param: String) -> String? {
-   guard let url = URLComponents(string: url) else { return nil }
-   return url.queryItems?.first(where: { $0.name == param })?.value
+ //     MyWebView(request: request)
   }
 }
+
 struct MyWebView: UIViewRepresentable{
   var request: PaymentRequest
   var webView: WKWebView
@@ -88,50 +68,41 @@ struct MyWebView: UIViewRepresentable{
       self.parent = uiWebView
       self.request = request
     }
-    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
-      print("scene")
-    }
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
       print("application")
       return true
     }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-      // Hides loader
-      print("webview1")
-    }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-      // Hides loader
-      print("webview2")
-    }
-    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-      // Shows loader
-      print("webview3")
-    }
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-      print("webview4")
-    }
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
       // Suppose you don't want your user to go a restricted site
       // Here you can get many information about new url from 'navigationAction.request.description'
-      print("webview5")
       let url = navigationAction.request.url?.absoluteString
       print(url ?? "url is null")
       for item in request.walletScheme{
         if (url?.contains(item) ?? false){
-          print("launching app: " + url!)
+          print("walletScheme: " + url!)
           let schemeURL = URL(string: url!)
           if UIApplication.shared.canOpenURL(schemeURL!)
           {
-            UIApplication.shared.open(schemeURL!)
+            if url?.contains(request.returnUrl) ?? false {
+                print("StatusCallback")
+                request.StatusCallback(url: navigationAction.request.url!)
+            }else{
+                print("launch")
+                UIApplication.shared.open(schemeURL!)
+            }
             decisionHandler(.cancel)
             return
           }
         }
+          
       }
       // This allows the navigation
       decisionHandler(.allow)
     }
   }
+    
+
+    
   func makeCoordinator() -> Coordinator {
     print("Coordinator")
     return Coordinator(self, request: request)

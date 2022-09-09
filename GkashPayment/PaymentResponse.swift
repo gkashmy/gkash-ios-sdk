@@ -17,7 +17,7 @@ public class PaymentResponse {
    public var CID: String = ""
    public var PaymentType: String = ""
    public var Signature: String = ""
-   public init(Status : String, Amount: String, CartId: String, Description: String, Currency: String, POID: String, CID: String, PaymentType: String) {
+   public init(Status : String = "", Amount: String = "", CartId: String = "", Description: String = "", Currency: String = "", POID: String = "", CID: String = "", PaymentType: String = "") {
        self.Status = Status
        self.Amount = Amount
        self.CartId = CartId
@@ -32,7 +32,7 @@ public class PaymentResponse {
      let doubleAmount : Double? = Double(Amount)
      let amount : String = String(format: "%.2f", doubleAmount!).replacingOccurrences(of: ".", with: "")
      let sign : String = (request.signatureKey + ";" + CID + ";" + POID + ";" + CartId + ";" +
-                amount + ";" + Currency + ";" + Status).uppercased()
+                          amount + ";" + Currency + ";" + Status).uppercased()
      var digest = [UInt8](repeating: 0, count: Int(CC_SHA512_DIGEST_LENGTH))
      if let data = sign.data(using: String.Encoding.utf8) {
        let value = data as NSData

@@ -11,7 +11,7 @@ import Foundation
 public class PaymentRequest{
   public var walletScheme : [String] = ["apaylater://app.apaylater.com",
                   "stage-onlinepayment.boostorium.com",
-                  "uat.shopee.com.my/","gkash://returntoapp"]
+                  "uat.shopee.com.my/"]
   public let prodWalletScheme : [String] = ["apaylater://app.apaylater.com",
                      "stage-onlinepayment.boostorium.com",
                      "uat.shopee.com.my/"]
@@ -35,12 +35,14 @@ public class PaymentRequest{
   public var billingCountry: String = ""
   public var returnUrl: String = ""
   public var isProd:Bool = false
+  public var callback: TransStatusCallback? = nil
   public init(){}
-  public init(cid: String, signatureKey: String, amount: String, cartId: String, isProd: Bool, returnUrl: String){
+    public init(cid: String = "", signatureKey: String = "", amount: String = "", cartId: String = "", isProd: Bool = false, returnUrl: String = "", callback : TransStatusCallback?){
     self.cid = cid
     self.signatureKey = signatureKey
     self.amount = amount
     self.cartId = cartId
+    self.callback = callback
     if(returnUrl == ""){
       self.returnUrl = "gkash://returntoapp"
     }else{
@@ -51,6 +53,7 @@ public class PaymentRequest{
       self.HOST_URL = "https://api.gkash.my"
       walletScheme = prodWalletScheme
     }
+        walletScheme.append(self.returnUrl)
   }
   public func generateSignature() -> String {
     let doubleAmount : Double? = Double(amount)
@@ -67,6 +70,34 @@ public class PaymentRequest{
       digestHex += String(format: "%02x", digest[index])
     }
     return digestHex
+  }
+    
+public func StatusCallback(url : URL){
+    print("MyWebView :" + url.absoluteString)
+    var status : String = getQueryStringParameter(url: url.absoluteString, param: "status") ?? "Unknown status"
+    status = status.replacingOccurrences(of: "+", with: " ")
+    let description : String = getQueryStringParameter(url: url.absoluteString, param: "description") ?? ""
+    let CID : String = getQueryStringParameter(url: url.absoluteString, param: "CID") ?? ""
+    let POID : String = getQueryStringParameter(url: url.absoluteString, param: "POID") ?? ""
+    let cartid : String = getQueryStringParameter(url: url.absoluteString, param: "cartid") ?? ""
+    let amount : String = getQueryStringParameter(url: url.absoluteString, param: "amount") ?? ""
+    let currency : String = getQueryStringParameter(url: url.absoluteString, param: "currency") ?? ""
+    var PaymentType : String = getQueryStringParameter(url: url.absoluteString, param: "PaymentType") ?? ""
+    PaymentType = PaymentType.replacingOccurrences(of: "+", with: " ")
+    let signature : String = getQueryStringParameter(url: url.absoluteString, param: "signature") ?? ""
+    let resp : PaymentResponse = PaymentResponse(Status: status, Amount: amount, CartId: cartid, Description: description, Currency: currency, POID: POID, CID: CID, PaymentType: PaymentType)
+    if(resp.validateSignature(signature: signature, request: self)){
+      callback!.getStatus(response: resp)
+    }else{
+      resp.Status = "11 - Pending"
+      resp.Description = "Invalid Signature"
+      callback!.getStatus(response: resp)
+    }
+}
+        
+private func getQueryStringParameter(url: String, param: String) -> String? {
+   guard let url = URLComponents(string: url) else { return nil }
+   return url.queryItems?.first(where: { $0.name == param })?.value
   }
 }
 
