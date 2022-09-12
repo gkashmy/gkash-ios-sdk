@@ -7,7 +7,7 @@ This library allows you to integrate Gkash Payment Gateway into your IOS App.
 To integrate GkashPayment into your Xcode project using CocoaPods, specify it in your Podfile:
 
 ```
-pod 'GkashPayment', '~> 0.2'
+pod 'GkashPayment', '~> 0.3'
 ```
 
 Run pod install and open the .xcworkspace file to launch Xcode.
