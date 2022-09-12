@@ -12,7 +12,7 @@ pod 'GkashPayment', '~> 0.2'
 
 Run pod install and open the .xcworkspace file to launch Xcode.
 
-##Return URL
+## Return URL
 To get your transaction status you need to pass your URL scheme to GkashPaymentSDK
 Register your URL scheme
 
