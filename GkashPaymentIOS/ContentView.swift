@@ -27,7 +27,7 @@ struct ContentView: View, TransStatusCallback {
         //cartId must be unique
         //returnUrl will be your APP URL Scheme. eg: gkash
         //if production purpose set isProd to true
-        request = PaymentRequest(cid: "M161-U-33", signatureKey: "oAhVwtUxfrop4cI", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self)
+        request = PaymentRequest(cid: "M102-U-xxx", signatureKey: "yourKeys", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self)
     }
     
     var body: some View {
