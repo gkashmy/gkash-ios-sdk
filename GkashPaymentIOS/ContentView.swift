@@ -10,7 +10,7 @@ import GkashPayment
 
 struct ContentView: View, TransStatusCallback {
     func getStatus(response: PaymentResponse) {
-        print("getStatus: " + response.Status)
+        print("getStatus: " + response.status)
         paymentResponse = response
         currentPage = "ResponsePage"
         isShowingView = false
@@ -27,7 +27,7 @@ struct ContentView: View, TransStatusCallback {
         //cartId must be unique
         //returnUrl will be your APP URL Scheme. eg: gkash
         //if production purpose set isProd to true
-        request = PaymentRequest(cid: "M102-U-XXX", signatureKey: "YourSignatureKey", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self)
+        request = PaymentRequest(cid: "M161-U-33", signatureKey: "oAhVwtUxfrop4cI", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self)
     }
     
     var body: some View {
@@ -55,13 +55,13 @@ struct ContentView: View, TransStatusCallback {
             }
         case "ResponsePage":
             VStack{
-                Text("Status: " + paymentResponse.Status)
-                Text("Description: " + paymentResponse.Description)
+                Text("Status: " + paymentResponse.status)
+                Text("Description: " + paymentResponse.description)
                 Text("POID: " + paymentResponse.POID)
-                Text("Amount: " + paymentResponse.Currency + paymentResponse.Amount)
-                Text("CartId: " + paymentResponse.CartId)
+                Text("Amount: " + paymentResponse.currency + paymentResponse.amount)
+                Text("CartId: " + paymentResponse.cartid)
                 Text("PaymentType: " + paymentResponse.PaymentType)
-                Text("CID: " + paymentResponse.CID)
+                Text("CID: " + paymentResponse.cid)
                 Button {
                     currentPage = "MainPage"
                 } label: {

@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import SwiftUI
 import WebKit
 public struct GkashPaymentSDK: View {
   var request: PaymentRequest

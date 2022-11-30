@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
   spec.name          = 'GkashPayment'
-  spec.version       = '0.3'
+  spec.version       = '0.4'
   spec.license       = 'MIT'
   spec.homepage      = 'https://github.com/gkashmy/gkash-ios-sdk'
   spec.authors       = { 'Gkash developer' => 'developers@gkash.com' }

@@ -89,8 +89,8 @@ public func StatusCallback(url : URL){
     if(resp.validateSignature(signature: signature, request: self)){
       callback!.getStatus(response: resp)
     }else{
-      resp.Status = "11 - Pending"
-      resp.Description = "Invalid Signature"
+      resp.status = "11 - Pending"
+      resp.description = "Invalid Signature"
       callback!.getStatus(response: resp)
     }
 }
