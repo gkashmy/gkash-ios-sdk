@@ -7,7 +7,7 @@
 import CommonCrypto
 import Foundation
 
-public class PaymentResponse {
+public class PaymentResponse : Codable {
    public var status: String = ""
    public var amount: String = ""
    public var cartid: String = ""
