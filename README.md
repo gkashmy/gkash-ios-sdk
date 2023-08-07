@@ -1,4 +1,4 @@
-# Gkash Payment SDK for IOS
+# Gkash Payment SDK for IOS (E-Commerce)
 
 This library allows you to integrate Gkash Payment Gateway into your IOS App.
 
