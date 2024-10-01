@@ -52,6 +52,7 @@ struct MyWebView: UIViewRepresentable{
       URLQueryItem(name: "v_lastname", value: request.lastName),
       URLQueryItem(name: "v_billemail", value: request.email),
       URLQueryItem(name: "v_billphone", value: request.mobileNo),
+	  URLQueryItem(name: "callbackurl", value: request.callbackUrl),
       URLQueryItem(name: "signature", value: request.generateSignature()),
       URLQueryItem(name: "returnurl", value: request.returnUrl),
     ]
