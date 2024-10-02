@@ -47,7 +47,7 @@ struct ContentView: View, TransStatusCallback {
     //cartId must be an unique reference ID
     //pass isProd: false if in staging environment, isProd: true in production environment
     func generateRequest(){
-        request = PaymentRequest(cid: "M102-U-XXX", signatureKey: "YourSignatureKey", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "YourUrlScheme", callback: self)
+        request = PaymentRequest(cid: "M102-U-xxx", signatureKey: "yourKeys", amount: amount, cartId: "IOSSDK" + String(format: "%.0f",  NSDate().timeIntervalSince1970), isProd: false, returnUrl: "", callback: self, callbackUrl: "")
     }
     
     var body: some View {

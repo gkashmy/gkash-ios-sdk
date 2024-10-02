@@ -37,7 +37,8 @@ public class PaymentRequest{
   public var isProd:Bool = false
   public var callback: TransStatusCallback? = nil
   public init(){}
-    public init(cid: String = "", signatureKey: String = "", amount: String = "", cartId: String = "", isProd: Bool = false, returnUrl: String = "", callback : TransStatusCallback?){
+    public init(cid: String = "", signatureKey: String = "", amount: String = "", cartId: String = "", isProd: Bool = false, 
+                returnUrl: String = "", callback : TransStatusCallback?, callbackUrl: String = ""){
     self.cid = cid
     self.signatureKey = signatureKey
     self.amount = amount
@@ -48,12 +49,13 @@ public class PaymentRequest{
     }else{
       self.returnUrl = returnUrl
     }
+    self.callbackUrl = callbackUrl
     self.isProd = isProd
     if(isProd){
       self.HOST_URL = "https://api.gkash.my"
       walletScheme = prodWalletScheme
     }
-        walletScheme.append(self.returnUrl)
+    walletScheme.append(self.returnUrl)
   }
   public func generateSignature() -> String {
     let doubleAmount : Double? = Double(amount)
