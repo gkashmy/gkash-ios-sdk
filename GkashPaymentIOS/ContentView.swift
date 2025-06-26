@@ -51,6 +51,21 @@ struct ContentView: View, TransStatusCallback {
                         generateRequest()
                     })
                     Spacer()
+                    Button(action: {
+                                if let url = URL(string: "sarawakpay://safari?lk=h5pay&mallId=M100068722&transFlows=ZF202506261000634537&merName=GKASH%20QA&orderAmt=0.10&detailURL=https://api-staging.pay.asia/api/SarawakPay/Return?PoRemId=M161-PO-242005&mdrMode=0&serviceCharge=0&merOrderNo=M161-PO-242005&description=GKASH%20QA&successUrl=https://api-staging.pay.asia/api/SarawakPay/Return?PoRemId=M161-PO-242005") {
+                                    if UIApplication.shared.canOpenURL(url) {
+                                        UIApplication.shared.open(url)
+                                    } else {
+                                        print("App not installed or URL can't be opened.")
+                                    }
+                                }
+                            }) {
+                                Text("Open Sarawak App")
+                                    .padding()
+                                    .foregroundColor(.white)
+                                    .background(Color.blue)
+                                    .cornerRadius(8)
+                            }
                 }.padding(30).navigationBarHidden(true)
             }
         case "ResponsePage":

@@ -76,7 +76,7 @@ struct MyWebView: UIViewRepresentable{
       // Suppose you don't want your user to go a restricted site
       // Here you can get many information about new url from 'navigationAction.request.description'
       let url = navigationAction.request.url?.absoluteString
-      print(url ?? "url is null")
+      print("currenturl: " + (url ?? "url is null"))
       for item in request.walletScheme{
         if (url?.contains(item) ?? false){
           print("walletScheme: " + url!)
