@@ -87,14 +87,16 @@ struct MyWebView: UIViewRepresentable{
                 print("StatusCallback")
                 request.StatusCallback(url: navigationAction.request.url!)
             }else{
-                print("launch")
+                print("launch third party payment app to complete payment")
                 UIApplication.shared.open(schemeURL!)
             }
             decisionHandler(.cancel)
             return
+          }else{
+              print("Unable to launch " + url!)
           }
+            
         }
-          
       }
       // This allows the navigation
       decisionHandler(.allow)

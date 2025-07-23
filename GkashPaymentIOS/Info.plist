@@ -14,8 +14,9 @@
 		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
-    <array>
-        <string>sarawakpay</string>
-    </array>
+	<array>
+		<string>sarawakpay</string>
+		<string>weixin</string>
+	</array>
 </dict>
 </plist>

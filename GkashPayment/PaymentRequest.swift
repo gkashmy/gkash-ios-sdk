@@ -10,12 +10,13 @@ import Foundation
 
 public class PaymentRequest{
   public var walletScheme : [String] = ["apaylater://app.apaylater.com",
-                  "stage-onlinepayment.boostorium.com",
-                  "uat.shopee.com.my/", "sarawakpay://"]
+                                        "stage-onlinepayment.boostorium.com",
+                                        "sarawakpay://",
+                                        "weixin://"]
   public let prodWalletScheme : [String] = ["apaylater://app.apaylater.com",
-                     "stage-onlinepayment.boostorium.com",
-                     "uat.shopee.com.my/",
-                     "sarawakpay://"]
+                                            "stage-onlinepayment.boostorium.com",
+                                            "sarawakpay://",
+                                            "weixin://"]
   public var HOST_URL : String = "https://api-staging.pay.asia"
   public let version: String = "1.5.0"
   public var cid: String = ""
