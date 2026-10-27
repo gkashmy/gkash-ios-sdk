@@ -9,102 +9,122 @@ import SwiftUI
 import WebKit
 public struct GkashPaymentSDK: View {
   var request: PaymentRequest
-  
+  @State private var progress: Double = 0
+
   public init(request : PaymentRequest) {
     self.request = request
   }
   public var body: some View {
-    MyWebView(request: request).onOpenURL { url in
+    Group {
+      if request.hostToHost {
+        HostToHostView(request: request)
+      } else {
+        VStack(spacing: 0) {
+          ProgressView(value: progress)
+            .progressViewStyle(LinearProgressViewStyle())
+            .opacity(progress < 1 ? 1 : 0)
+          MyWebView(request: request, progress: $progress)
+        }
+      }
+    }.onOpenURL { url in
         print("onOpenURL")
         request.StatusCallback(url: url)
     }
- //     MyWebView(request: request)
+  }
+}
+
+struct HostToHostView: View {
+  var request: PaymentRequest
+  var body: some View {
+    ProgressView()
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .onAppear {
+        request.submitHostToHost()
+      }
   }
 }
 
 struct MyWebView: UIViewRepresentable{
   var request: PaymentRequest
-  var webView: WKWebView
-  init(request: PaymentRequest){
-    self.request = request
-    webView = WKWebView(frame: CGRect(x: 0.0, y: 0.0, width: 0.1, height: 0.1))
-  }
+  @Binding var progress: Double
   func makeUIView(context: Context) -> WKWebView {
     print("make UI View")
-  //  return WKWebView(frame: CGRect(x: 0.0, y: 0.0, width: 0.1, height: 0.1))
-    return self.webView
-  }
-  func updateUIView(_ uiView: WKWebView, context: Context) {
-    let url: String = request.HOST_URL + "/api/PaymentForm.aspx"
-    print("update ui view")
-    uiView.navigationDelegate = context.coordinator
-    var urlRequest: URLRequest = URLRequest(url: URL(string: url)!)
+    let webView = WKWebView()
+    webView.navigationDelegate = context.coordinator
+    context.coordinator.observeProgress(of: webView)
+    // Load once here, updateUIView runs on every SwiftUI update and must not post the payment again
+    var urlRequest: URLRequest = URLRequest(url: URL(string: request.HOST_URL + "/api/PaymentForm.aspx")!)
     urlRequest.httpMethod = "POST"
     urlRequest.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-    var components = URLComponents(url: URL(string: url)!, resolvingAgainstBaseURL: false)!
-    components.queryItems = [
-      URLQueryItem(name: "version", value: request.version),
-      URLQueryItem(name: "CID", value: request.cid),
-      URLQueryItem(name: "v_currency", value: request.currency),
-      URLQueryItem(name: "v_amount", value: request.amount),
-      URLQueryItem(name: "v_cartid", value: request.cartId),
-      URLQueryItem(name: "v_firstname", value: request.firstName),
-      URLQueryItem(name: "v_lastname", value: request.lastName),
-      URLQueryItem(name: "v_billemail", value: request.email),
-      URLQueryItem(name: "v_billphone", value: request.mobileNo),
-	  URLQueryItem(name: "callbackurl", value: request.callbackUrl),
-      URLQueryItem(name: "signature", value: request.generateSignature()),
-      URLQueryItem(name: "returnurl", value: request.returnUrl),
-    ]
-    let query = components.url!.query
-    urlRequest.httpBody = Data(query!.utf8)
-    uiView.load(urlRequest)
+    urlRequest.httpBody = request.formBody()
+    webView.load(urlRequest)
+    return webView
   }
-  class Coordinator : NSObject, WKNavigationDelegate, UISceneDelegate, UIApplicationDelegate {
+  func updateUIView(_ uiView: WKWebView, context: Context) {
+  }
+  class Coordinator : NSObject, WKNavigationDelegate {
+    static let wechatCheckMwebPrefix = "https://wx.tenpay.com/cgi-bin/mmpayweb-bin/checkmweb"
     var parent: MyWebView
     var request: PaymentRequest
+    private var progressObservation: NSKeyValueObservation?
     init(_ uiWebView: MyWebView, request: PaymentRequest) {
       print("Coordinator init")
       self.parent = uiWebView
       self.request = request
     }
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-      print("application")
-      return true
+    func observeProgress(of webView: WKWebView) {
+      progressObservation = webView.observe(\.estimatedProgress, options: [.new]) { [weak self] webView, _ in
+        // The first change fires inside makeUIView, so update SwiftUI state after the view update ends
+        DispatchQueue.main.async {
+          self?.parent.progress = webView.estimatedProgress
+        }
+      }
     }
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-      // Suppose you don't want your user to go a restricted site
-      // Here you can get many information about new url from 'navigationAction.request.description'
-      let url = navigationAction.request.url?.absoluteString
-      print("currenturl: " + (url ?? "url is null"))
-      for item in request.walletScheme{
-        if (url?.contains(item) ?? false){
-          print("walletScheme: " + url!)
-          let schemeURL = URL(string: url!)
-          if UIApplication.shared.canOpenURL(schemeURL!)
-          {
-            if url?.contains(request.returnUrl) ?? false {
-                print("StatusCallback")
-                request.StatusCallback(url: navigationAction.request.url!)
-            }else{
-                print("launch third party payment app to complete payment")
-                UIApplication.shared.open(schemeURL!)
-            }
-            decisionHandler(.cancel)
-            return
-          }else{
-              print("Unable to launch " + url!)
+      guard let url = navigationAction.request.url else {
+        decisionHandler(.allow)
+        return
+      }
+      let urlString = url.absoluteString
+      print("currenturl: " + urlString)
+      if urlString.hasPrefix(request.returnUrl) {
+        print("StatusCallback")
+        request.StatusCallback(url: url)
+        decisionHandler(.cancel)
+        return
+      }
+      // WeChat Pay H5 only accepts the checkmweb page when the Referer is the merchant domain
+      if urlString.hasPrefix(Coordinator.wechatCheckMwebPrefix) && navigationAction.request.value(forHTTPHeaderField: "Referer") == nil {
+        print("add header to wechat")
+        var wechatRequest = navigationAction.request
+        wechatRequest.setValue(request.HOST_URL + "/", forHTTPHeaderField: "Referer")
+        webView.load(wechatRequest)
+        decisionHandler(.cancel)
+        return
+      }
+      // Wallet links and any non web scheme are handed over to the app that handles them
+      let isWebScheme = ["http", "https", "about", "data", "blob"].contains(url.scheme?.lowercased() ?? "")
+      if !isWebScheme || request.walletScheme.contains(where: { urlString.contains($0) }) {
+        print("launch third party payment app to complete payment")
+        UIApplication.shared.open(url) { opened in
+          if !opened {
+            print("Unable to launch " + urlString)
           }
-            
         }
+        decisionHandler(.cancel)
+        return
       }
       // This allows the navigation
       decisionHandler(.allow)
     }
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+      print("load failed: " + error.localizedDescription)
+    }
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+      print("load failed: " + error.localizedDescription)
+    }
   }
-    
 
-    
   func makeCoordinator() -> Coordinator {
     print("Coordinator")
     return Coordinator(self, request: request)

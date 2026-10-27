@@ -96,3 +96,18 @@ struct ContentView: View, TransStatusCallback {
     }
 }
 ```
+
+## Bind and Recurring
+Set `recurringType` to bind the customer's card during payment. The `PaymentResponse` of a bind payment carries the card's `epkey`.
+
+```Swift
+let request = PaymentRequest(cid: "M102-U-xxx", signatureKey: "yourKeys", amount: amount, cartId: cartId, isProd: false, returnUrl: "", callback: self)
+request.recurringType = "MONTHLY"
+```
+
+To charge a bound card later, pass its `epKey` and set `hostToHost` to true. GkashPaymentSDK then submits the payment directly without showing the payment page, and returns the result through `TransStatusCallback`.
+
+```Swift
+let request = PaymentRequest(cid: "M102-U-xxx", signatureKey: "yourKeys", amount: amount, cartId: cartId, isProd: false, returnUrl: "", callback: self,
+                             recurringType: "MONTHLY", epKey: epKey, hostToHost: true)
+```

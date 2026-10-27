@@ -17,7 +17,9 @@ public class PaymentResponse : Codable {
    public var cid: String = ""
    public var PaymentType: String = ""
    public var Signature: String = ""
-   public init(Status : String = "", Amount: String = "", CartId: String = "", Description: String = "", Currency: String = "", POID: String = "", CID: String = "", PaymentType: String = "") {
+   //epkey of the bound card, returned by bind and recurring payments
+   public var epkey: String = ""
+   public init(Status : String = "", Amount: String = "", CartId: String = "", Description: String = "", Currency: String = "", POID: String = "", CID: String = "", PaymentType: String = "", EpKey: String = "") {
        self.status = Status
        self.amount = Amount
        self.cartid = CartId
@@ -26,11 +28,14 @@ public class PaymentResponse : Codable {
        self.POID = POID
        self.cid = CID
        self.PaymentType = PaymentType
+       self.epkey = EpKey
      }
-    
+
    public func validateSignature(signature : String, request: PaymentRequest) -> Bool {
-     let doubleAmount : Double? = Double(amount)
-     let amount : String = String(format: "%.2f", doubleAmount!).replacingOccurrences(of: ".", with: "")
+     guard let doubleAmount : Double = Double(amount) else {
+       return false
+     }
+     let amount : String = String(format: "%.2f", doubleAmount).replacingOccurrences(of: ".", with: "")
      let sign : String = (request.signatureKey + ";" + cid + ";" + POID + ";" + cartid + ";" +
                           amount + ";" + currency + ";" + status).uppercased()
      var digest = [UInt8](repeating: 0, count: Int(CC_SHA512_DIGEST_LENGTH))
